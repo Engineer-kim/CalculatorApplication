@@ -1,6 +1,10 @@
 package prices
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
 
 // 단순히 구조 정의 즉. 타입 정의
 type TaxIncludedPriceJob struct {
@@ -27,5 +31,31 @@ func NewTaxIncludedPriceJob(taxRate float64) *TaxIncludedPriceJob {
 		InputPrices: []float64{10, 20, 30},
 		TaxRate:     taxRate,
 		//TaxIncludedPrices: make(map[string]float64),
+	}
+}
+
+func (job TaxIncludedPriceJob) LoadData() {
+	file, err := os.Open("prices.txt")
+
+	if err != nil {
+		fmt.Println("Could not open prices.txt")
+		fmt.Println(err)
+		return
+	}
+
+	scanner := bufio.NewScanner(file)
+
+	var lines []string
+
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	err = scanner.Err()
+	if err != nil {
+		fmt.Println("Reading The FIle content Falied")
+		fmt.Println(err)
+		file.Close()
+		return
 	}
 }
