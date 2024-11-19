@@ -1,28 +1,35 @@
 package prices
 
 import (
-	"bufio"
+	"calculator.com/price-calculator/conversion"
+	"calculator.com/price-calculator/fileManager"
 	"fmt"
-	"os"
 )
 
 // 단순히 구조 정의 즉. 타입 정의
 type TaxIncludedPriceJob struct {
 	TaxRate           float64
 	InputPrices       []float64
-	TaxIncludedPrices map[string]float64
+	TaxIncludedPrices map[string]string
 }
 
-func (job TaxIncludedPriceJob) Process() {
-	result := make(map[string]float64)
+// 솟값을 전달안하면  실제 구조체로 전달된 필드의값을 변경할수 없기 떄문에  TaxIncludedPriceJob 의 값이 아닌 주솟값전달(얕은 복사)
+func (job *TaxIncludedPriceJob) Process() {
+	job.LoadData()
+
+	result := make(map[string]string)
 
 	//Sprintf : 문자열을 포맷팅
 	for _, price := range job.InputPrices {
+		taxIncludePrice := price * (1 + job.TaxRate)
 		//result[키] = 벨류
-		result[fmt.Sprintf("%.2f::", price)] = price * (1 + job.TaxRate)
+		result[fmt.Sprintf("%.2f 일때", price)] = fmt.Sprintf("%.2f", taxIncludePrice)
 	}
 
-	fmt.Println(result)
+	//fmt.Println(result)
+	job.TaxIncludedPrices = result
+
+	fileManager.WriteJson(fmt.Sprintf("result_%.0f.json", job.TaxRate*100), job)
 }
 
 // 컨스트럭션 함수  (메모리 할당)
@@ -34,28 +41,29 @@ func NewTaxIncludedPriceJob(taxRate float64) *TaxIncludedPriceJob {
 	}
 }
 
-func (job TaxIncludedPriceJob) LoadData() {
-	file, err := os.Open("prices.txt")
+func (job *TaxIncludedPriceJob) LoadData() error {
+
+	lines, err := fileManager.ReadLines("prices.txt")
 
 	if err != nil {
-		fmt.Println("Could not open prices.txt")
-		fmt.Println(err)
-		return
+		fmt.Println("Error reading file:", err)
+		return err
 	}
 
-	scanner := bufio.NewScanner(file)
+	prices, err := conversion.StringsToFloat(lines)
 
-	var lines []string
-
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	err = scanner.Err()
+	//for lineIndex, line := range lines {
+	//	floatPrice, err := strconv.ParseFloat(line, 64)
+	//
 	if err != nil {
-		fmt.Println("Reading The FIle content Falied")
+		fmt.Println("Converting price to Float falied")
 		fmt.Println(err)
-		file.Close()
-		return
+		return err
 	}
+	//
+	//	prices[lineIndex] = floatPrice
+	//}
+
+	job.InputPrices = prices
+	return nil
 }
