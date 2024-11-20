@@ -29,10 +29,16 @@ func (fm FileManager) ReadLines() ([]string, error) {
 
 	err = scanner.Err()
 	if err != nil {
-		file.Close()
+		err := file.Close()
+		if err != nil {
+			return nil, err
+		}
 		return nil, errors.New("could not Read file")
 	}
-	file.Close()
+	err = file.Close()
+	if err != nil {
+		return nil, err
+	}
 	return lines, nil
 
 }
@@ -48,11 +54,17 @@ func (fm FileManager) WriteResult(data interface{}) error {
 	err = encoder.Encode(data)
 
 	if err != nil {
-		file.Close()
+		err := file.Close()
+		if err != nil {
+			return err
+		}
 		return errors.New("could not WriteJson")
 	}
 
-	file.Close()
+	err = file.Close()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
