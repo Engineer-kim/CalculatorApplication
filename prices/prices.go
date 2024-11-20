@@ -2,15 +2,16 @@ package prices
 
 import (
 	"calculator.com/price-calculator/conversion"
-	"calculator.com/price-calculator/fileManager"
+	"calculator.com/price-calculator/iomnager"
 	"fmt"
 )
 
 // 단순히 구조 정의 즉. 타입 정의
 type TaxIncludedPriceJob struct {
-	TaxRate           float64
-	InputPrices       []float64
-	TaxIncludedPrices map[string]string
+	IOManager         iomnager.IOManager `json:"-"`
+	TaxRate           float64            `json:"tax_rate"`
+	InputPrices       []float64          `json:"input_prices"`
+	TaxIncludedPrices map[string]string  `json:"tax_included_prices"`
 }
 
 // 솟값을 전달안하면  실제 구조체로 전달된 필드의값을 변경할수 없기 떄문에  TaxIncludedPriceJob 의 값이 아닌 주솟값전달(얕은 복사)
@@ -28,13 +29,13 @@ func (job *TaxIncludedPriceJob) Process() {
 
 	//fmt.Println(result)
 	job.TaxIncludedPrices = result
-
-	fileManager.WriteJson(fmt.Sprintf("result_%.0f.json", job.TaxRate*100), job)
+	job.IOManager.WriteResult(job)
 }
 
 // 컨스트럭션 함수  (메모리 할당)
-func NewTaxIncludedPriceJob(taxRate float64) *TaxIncludedPriceJob {
+func NewTaxIncludedPriceJob(iom iomnager.IOManager, taxRate float64) *TaxIncludedPriceJob {
 	return &TaxIncludedPriceJob{
+		IOManager:   iom,
 		InputPrices: []float64{10, 20, 30},
 		TaxRate:     taxRate,
 		//TaxIncludedPrices: make(map[string]float64),
@@ -43,7 +44,7 @@ func NewTaxIncludedPriceJob(taxRate float64) *TaxIncludedPriceJob {
 
 func (job *TaxIncludedPriceJob) LoadData() error {
 
-	lines, err := fileManager.ReadLines("prices.txt")
+	lines, err := job.IOManager.ReadLines()
 
 	if err != nil {
 		fmt.Println("Error reading file:", err)
