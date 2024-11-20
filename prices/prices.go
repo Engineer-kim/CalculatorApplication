@@ -15,7 +15,7 @@ type TaxIncludedPriceJob struct {
 }
 
 // 솟값을 전달안하면  실제 구조체로 전달된 필드의값을 변경할수 없기 떄문에  TaxIncludedPriceJob 의 값이 아닌 주솟값전달(얕은 복사)
-func (job *TaxIncludedPriceJob) Process() {
+func (job *TaxIncludedPriceJob) Process(doneChan chan bool) {
 	err := job.LoadData()
 	if err != nil {
 		return
@@ -32,10 +32,10 @@ func (job *TaxIncludedPriceJob) Process() {
 
 	//fmt.Println(result)
 	job.TaxIncludedPrices = result
-	err = job.IOManager.WriteResult(job)
-	if err != nil {
-		return
-	}
+	job.IOManager.WriteResult(job)
+
+	doneChan <- true
+
 }
 
 // 컨스트럭션 함수  (메모리 할당)

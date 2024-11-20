@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"time"
 )
 
 type FileManager struct {
@@ -49,6 +50,8 @@ func (fm FileManager) WriteResult(data interface{}) error {
 	if err != nil {
 		return errors.New("could not open file")
 	}
+
+	time.Sleep(3 * time.Second) //일부러 고루틴 적용하려고 의도적으로 지체함
 
 	encoder := json.NewEncoder(file)
 	err = encoder.Encode(data)
